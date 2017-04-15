@@ -1,0 +1,23 @@
+{
+  "name": "polymer-starter-kit",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "browser-sync": "^2.18.8",
+    "eslint": "^3.12.0",
+    "eslint-config-google": "^0.7.1",
+    "eslint-plugin-html": "^1.7.0"
+  },
+  "scripts": {
+    "lint": "eslint . --ext js,html --ignore-path .gitignore",
+    "test": "npm run lint && polymer test",
+    "dev":  "polymer serve --proxy-path api/ --proxy-target http://localhost:8111 & npm run watch",
+    "watch":"browser-sync start --proxy localhost:8081 --files 'src/*.html, src/*.js, images/*' "
+  },
+  "description": "[![Build Status](https://travis-ci.org/PolymerElements/polymer-starter-kit.svg?branch=master)](https://travis-ci.org/PolymerElements/polymer-starter-kit)",
+  "version": "1.0.0",
+  "main": "service-worker.js",
+  "directories": {
+    "test": "test"
+  },
+  "author": ""
+}

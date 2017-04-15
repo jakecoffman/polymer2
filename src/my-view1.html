@@ -1,0 +1,58 @@
+<link rel=import href=../bower_components/polymer/polymer-element.html>
+<link rel=import href=../bower_components/iron-ajax/iron-ajax.html>
+<link rel=import href=shared-styles.html>
+
+<dom-module id=my-view1>
+  <template>
+    <style include=shared-styles>
+      :host {
+        display: block;
+        padding: 5px;
+      }
+    </style>
+
+    <div class=card>
+      <template is="dom-repeat" items="{{_toArray(content)}}">
+        <b>{{item.name}}</b> {{item.value}}
+      </template>
+    </div>
+
+    <iron-ajax id="getter" auto last-response="{{content}}"></iron-ajax>
+  </template>
+
+  <script>
+    class MyView1 extends Polymer.Element {
+      static get is() { return 'my-view1'; }
+      static get properties() {
+        return {
+          book: {
+            type: String,
+            observer: '_changed',
+          },
+          chapter: {
+            type: Number,
+            observer: '_changed',
+          },
+          version: {
+            type: String,
+            observer: '_changed',
+          }
+        }
+      }
+      _changed() {
+        this.$.getter.url = '/api/books/' + this.book + '/' + this.chapter;
+      }
+      _toArray(obj) {
+      return Object.keys(obj).map(function(key) {
+        return {
+          name: key,
+          value: obj[key]
+        };
+      });
+    }
+
+    }
+
+    window.customElements.define(MyView1.is, MyView1);
+  </script>
+</dom-module>
