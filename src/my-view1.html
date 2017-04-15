@@ -12,6 +12,7 @@
     </style>
 
     <div class=card>
+      <h1>{{chapter}}</h1>
       <template is="dom-repeat" items="{{_toArray(content)}}">
         <b>{{item.name}}</b> {{item.value}}
       </template>

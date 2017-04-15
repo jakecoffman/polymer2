@@ -8,6 +8,8 @@ import (
 )
 
 var books map[string][]string
+// TODO this is not good...
+// maps BOOK to map of CHAPTERS to map of VERSES to VERSE
 var MSG map[string]map[string]map[string]string
 
 func init() {
@@ -35,6 +37,14 @@ func main() {
 	})
 	r.GET("/books", func(c *gin.Context) {
 		c.JSON(200, books)
+	})
+	r.GET("/books/:book", func(c *gin.Context) {
+		book := MSG[c.Param("book")]
+		chapters := []string{}
+		for c := range book {
+			chapters = append(chapters, c)
+		}
+		c.JSON(200, chapters)
 	})
 	r.GET("/books/:book/:chapter", func(c *gin.Context) {
 		c.JSON(200, MSG[c.Param("book")][c.Param("chapter")])

@@ -10,91 +10,123 @@
 <link rel=import href=shared-styles.html>
 
 <dom-module id=book-picker>
-    <template>
-        <style include=shared-styles>
-            :host {
-                display: block;
-                padding: 5px;
-                --paper-tabs-selection-bar-color: var(--app-primary-color);
-                --paper-tab-ink: var(--accent-color);
-            }
-            .books {
-                display: flex;
-                justify-content: space-between;
-                flex-wrap: wrap;
-            }
-            .btn {
-                margin: 8px;
-            }
-        </style>
+  <template>
+    <style include=shared-styles>
+      :host {
+        display: block;
+        padding: 5px;
+        --paper-tabs-selection-bar-color: var(--app-primary-color);
+        --paper-tab-ink: var(--accent-color);
+      }
 
-        <paper-dialog id="modal" modal>
-            <h1>Select Book ({{book}})</h1>
-            <paper-tabs selected={{selected}}>
-                <paper-tab>Old Testament</paper-tab>
-                <paper-tab>New Testament</paper-tab>
-            </paper-tabs>
-            <paper-dialog-scrollable>
-                <iron-pages selected={{selected}}>
-                    <div class="books">
-                        <template is="dom-repeat" items="{{oldT}}">
-                            <paper-button class="btn" on-tap="select">{{item}}</paper-button>
-                        </template>
-                    </div>
-                    <div class="books">
-                        <template is="dom-repeat" items="{{newT}}">
-                            <paper-button class="btn" on-tap="select">{{item}}</paper-button>
-                        </template>
-                    </div>
-                </iron-pages>
-            </paper-dialog-scrollable>
-            <div class="buttons">
-                <paper-button dialog-confirm autofocus>Cancel</paper-button>
-            </div>
-        </paper-dialog>
-        <iron-ajax auto url="/api/books" on-response="onBooks"></iron-ajax>
+      .books {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
 
-    </template>
+      .btn {
+        margin: 8px;
+      }
+    </style>
 
-    <script>
-      class BookPicker extends Polymer.Element {
-        static get is() { return 'book-picker'; }
-        static get properties() {
-          return {
-            selected: {
-              type: Number,
-              value: 0
-            },
-            oldT: {
-              type: Array
-            },
-            newT: {
-              type: Array
-            },
-            book: {
-              type: String,
-              notify: true
-            },
-            chapter: {
-              type: Number,
-              notify: true
-            }
+    <paper-dialog id="modal" modal>
+      <h1>Select Book</h1>
+      <paper-tabs selected={{selected}}>
+        <paper-tab>Old Testament</paper-tab>
+        <paper-tab>New Testament</paper-tab>
+      </paper-tabs>
+      <paper-dialog-scrollable>
+        <iron-pages selected={{selected}}>
+          <div class="books">
+            <template is="dom-repeat" items="{{oldT}}">
+              <paper-button class="btn" on-tap="selectBook">{{item}}</paper-button>
+            </template>
+          </div>
+          <div class="books">
+            <template is="dom-repeat" items="{{newT}}">
+              <paper-button class="btn" on-tap="selectBook">{{item}}</paper-button>
+            </template>
+          </div>
+        </iron-pages>
+      </paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-confirm autofocus>Cancel</paper-button>
+      </div>
+    </paper-dialog>
+
+    <paper-dialog id="modal2" modal>
+      <h1>Select Chapter of {{book}}</h1>
+      <paper-dialog-scrollable>
+        <template is="dom-repeat" items="{{chapters}}">
+          <paper-button on-tap="selectChapter">{{item}}</paper-button>
+        </template>
+      </paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-confirm autofocus>Cancel</paper-button>
+      </div>
+    </paper-dialog>
+
+    <iron-ajax auto url="/api/books" on-response="onBooks"></iron-ajax>
+    <iron-ajax id="getchapters" auto last-response="{{chapters}}"></iron-ajax>
+
+  </template>
+
+  <script>
+    class BookPicker extends Polymer.Element {
+      static get is() {
+        return 'book-picker';
+      }
+
+      static get properties() {
+        return {
+          selected: {
+            type: Number,
+            value: 0
+          },
+          oldT: {
+            type: Array
+          },
+          newT: {
+            type: Array
+          },
+          book: {
+            type: String
+          },
+          chapter: {
+            type: Number
+          },
+          pickingChapter: {
+            type: Boolean,
+            value: false
           }
-        }
-        open() {
-          this.$.modal.open();
-        }
-        onBooks(e) {
-          this.oldT = e.detail.response['old'];
-          this.newT = e.detail.response['new'];
-        }
-        select(e) {
-          var book = e.model.get('item');
-          console.log(book);
-          this.book = book;
         }
       }
 
-      window.customElements.define(BookPicker.is, BookPicker);
-    </script>
+      open() {
+        this.$.modal.open();
+      }
+
+      onBooks(e) {
+        this.oldT = e.detail.response['old'];
+        this.newT = e.detail.response['new'];
+      }
+
+      selectBook(e) {
+        this.book = e.model.get('item');
+        this.pickingChapter = true;
+        this.$.getchapters.url = "/api/books/" + this.book;
+        this.$.modal.close();
+        this.$.modal2.open();
+      }
+
+      selectChapter(e) {
+        this.chapter = e.model.get('item');
+        this.$.modal2.close();
+        this.dispatchEvent(new CustomEvent('picked', {bubbles: true, composed: true, detail: {book: this.book, chapter: this.chapter}}));
+      }
+    }
+
+    window.customElements.define(BookPicker.is, BookPicker);
+  </script>
 </dom-module>

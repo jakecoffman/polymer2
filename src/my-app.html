@@ -14,166 +14,180 @@
 <link rel="import" href="my-icons.html">
 
 <dom-module id="my-app">
-    <template>
-        <style>
-            :host {
-                --app-primary-color: var(--paper-blue-grey-900);
-                --app-secondary-color: var(--paper-blue-grey-300);
-                --accent-color: var(--paper-brown-500);
+  <template>
+    <style>
+      :host {
+        --app-primary-color: var(--paper-blue-grey-900);
+        --app-secondary-color: var(--paper-blue-grey-300);
+        --accent-color: var(--paper-brown-500);
 
-                display: block;
-            }
+        display: block;
+      }
 
-            app-drawer-layout:not([narrow]) [drawer-toggle] {
-                display: none;
-            }
+      app-drawer-layout:not([narrow]) [drawer-toggle] {
+        display: none;
+      }
 
-            app-header {
-                color: #fff;
-                background-color: var(--app-primary-color);
-            }
+      app-header {
+        color: #fff;
+        background-color: var(--app-primary-color);
+      }
 
-            app-header paper-icon-button {
-                --paper-icon-button-ink-color: white;
-            }
+      app-header paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
 
-            .drawer-list {
-                margin: 0 20px;
-            }
+      .drawer-list {
+        margin: 0 20px;
+      }
 
-            .drawer-list a {
-                display: block;
-                padding: 0 16px;
-                text-decoration: none;
-                color: var(--app-secondary-color);
-                line-height: 40px;
-            }
+      .drawer-list a {
+        display: block;
+        padding: 0 16px;
+        text-decoration: none;
+        color: var(--app-secondary-color);
+        line-height: 40px;
+      }
 
-            .drawer-list a.iron-selected {
-                color: black;
-                font-weight: bold;
-            }
-        </style>
+      .drawer-list a.iron-selected {
+        color: black;
+        font-weight: bold;
+      }
+    </style>
 
-        <app-location route="{{route}}"></app-location>
-        <app-route
-                route="{{route}}"
-                pattern="/:page"
-                data="{{routeData}}"
-                tail="{{subroute}}"></app-route>
+    <app-location route="{{route}}"></app-location>
+    <app-route
+      route="{{route}}"
+      pattern="/:page"
+      data="{{routeData}}"
+      tail="{{subroute}}"></app-route>
 
-        <app-drawer-layout fullbleed>
-            <!-- Drawer content -->
-            <app-drawer id="drawer" slot="drawer">
-                <app-toolbar>Menu</app-toolbar>
-                <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
-                    <a name="view1" href="/view1">Bible</a>
-                    <!--<a name="view2" href="/view2">Version</a>-->
-                    <!--<a name="view3" href="/view3">Read</a>-->
-                </iron-selector>
-            </app-drawer>
+    <app-drawer-layout fullbleed>
+      <!-- Drawer content -->
+      <app-drawer id="drawer" slot="drawer">
+        <app-toolbar>Menu</app-toolbar>
+        <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+          <a name="view1" href="/view1">Bible</a>
+          <!--<a name="view2" href="/view2">Version</a>-->
+          <!--<a name="view3" href="/view3">Read</a>-->
+        </iron-selector>
+      </app-drawer>
 
-            <!-- Main content -->
-            <app-header-layout has-scrolling-region>
+      <!-- Main content -->
+      <app-header-layout has-scrolling-region>
 
-                <app-header slot="header" condenses reveals effects="waterfall">
-                    <app-toolbar>
-                        <paper-icon-button icon="my-icons:menu" drawer-toggle></paper-icon-button>
-                        <!--<div main-title>-->
-                            <paper-button on-tap="pick">
-                                {{book}} {{chapter}} ({{version}})
-                            </paper-button>
-                        <!--</div>-->
-                    </app-toolbar>
-                </app-header>
+        <app-header slot="header" condenses reveals effects="waterfall">
+          <app-toolbar>
+            <paper-icon-button icon="my-icons:menu" drawer-toggle></paper-icon-button>
+            <!--<div main-title>-->
+            <paper-button on-tap="pick">
+              {{book}} {{chapter}} ({{version}})
+            </paper-button>
+            <!--</div>-->
+          </app-toolbar>
+        </app-header>
 
-                {{book}}
+        <iron-pages
+          selected="[[page]]"
+          attr-for-selected="name"
+          fallback-selection="view404"
+          role="main">
+          <my-view1 name="view1" book="[[book]]" chapter="[[chapter]]" version="[[version]]"></my-view1>
+          <!--<my-view2 name="view2"></my-view2>-->
+          <!--<my-view3 name="view3"></my-view3>-->
+          <my-view404 name="view404"></my-view404>
+        </iron-pages>
+      </app-header-layout>
+    </app-drawer-layout>
+    <book-picker id="picker" book="{{book}}" chapter="{{chapter}}"></book-picker>
+  </template>
 
-                <iron-pages
-                        selected="[[page]]"
-                        attr-for-selected="name"
-                        fallback-selection="view404"
-                        role="main">
-                    <my-view1 name="view1" book="[[book]]" chapter="[[chapter]]" version="[[version]]"></my-view1>
-                    <!--<my-view2 name="view2"></my-view2>-->
-                    <!--<my-view3 name="view3"></my-view3>-->
-                    <my-view404 name="view404"></my-view404>
-                </iron-pages>
-            </app-header-layout>
-        </app-drawer-layout>
-        <book-picker id="picker" book="{{book}}" chapter="{{chapter}}"></book-picker>
-    </template>
+  <script>
+    class MyApp extends Polymer.Element {
 
-    <script>
-      class MyApp extends Polymer.Element {
+      static get is() {
+        return 'my-app';
+      }
 
-        static get is() {
-          return 'my-app';
-        }
+      ready() {
+        super.ready();
+        this.addEventListener('picked', e => this._pickedHandler(e));
+      }
 
-        static get properties() {
-          return {
-            page: {
-              type: String,
-              reflectToAttribute: true,
-              observer: '_pageChanged',
-            },
-            book: {
-              type: String,
-              value: "Genesis"
-            },
-            chapter: {
-              type: Number,
-              value: 1
-            },
-            version: {
-              type: String,
-              value: "MSG"
-            }
-          };
-        }
-
-        static get observers() {
-          return [
-            '_routePageChanged(routeData.page)',
-          ];
-        }
-
-        _routePageChanged(page) {
-          // Polymer 2.0 will call with `undefined` on initialization.
-          // Ignore until we are properly called with a string.
-          if (page === undefined) {
-            return;
+      static get properties() {
+        return {
+          page: {
+            type: String,
+            reflectToAttribute: true,
+            observer: '_pageChanged',
+          },
+          book: {
+            type: String,
+            value: "Genesis"
+          },
+          chapter: {
+            type: Number,
+            value: 1
+          },
+          version: {
+            type: String,
+            value: "MSG"
           }
+        };
+      }
 
-          // If no page was found in the route data, page will be an empty string.
-          // Deault to 'view1' in that case.
-          this.page = page || 'view1';
+      static get observers() {
+        return [
+          '_routePageChanged(routeData.page)',
+        ];
+      }
 
-          // Close a non-persistent drawer when the page & route are changed.
-          if (!this.$.drawer.persistent) {
-            this.$.drawer.close();
-          }
-        }
-
-        _pageChanged(page) {
-          // Load page import on demand. Show 404 page if fails
-          Polymer.importHref(
-            this.resolveUrl('my-' + page + '.html'),
-            null,
-            this._showPage404.bind(this),
-            true);
-        }
-
-        _showPage404() {
-          this.page = 'view404';
-        }
-
-        pick() {
-          this.$.picker.open();
+      static get listeners() {
+        return {
+          'picked': 'onPicked'
         }
       }
 
-      window.customElements.define(MyApp.is, MyApp);
-    </script>
+      _routePageChanged(page) {
+        // Polymer 2.0 will call with `undefined` on initialization.
+        // Ignore until we are properly called with a string.
+        if (page === undefined) {
+          return;
+        }
+
+        // If no page was found in the route data, page will be an empty string.
+        // Deault to 'view1' in that case.
+        this.page = page || 'view1';
+
+        // Close a non-persistent drawer when the page & route are changed.
+        if (!this.$.drawer.persistent) {
+          this.$.drawer.close();
+        }
+      }
+
+      _pageChanged(page) {
+        // Load page import on demand. Show 404 page if fails
+        Polymer.importHref(
+          this.resolveUrl('my-' + page + '.html'),
+          null,
+          this._showPage404.bind(this),
+          true);
+      }
+
+      _showPage404() {
+        this.page = 'view404';
+      }
+
+      pick() {
+        this.$.picker.open();
+      }
+
+      _pickedHandler(e) {
+        this.book = e.detail.book;
+        this.chapter = e.detail.chapter;
+      }
+    }
+
+    window.customElements.define(MyApp.is, MyApp);
+  </script>
 </dom-module>
