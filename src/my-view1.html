@@ -13,8 +13,8 @@
 
     <div class=card>
       <h1>{{chapter}}</h1>
-      <template is="dom-repeat" items="{{_toArray(content)}}">
-        <b>{{item.name}}</b> {{item.value}}
+      <template is="dom-repeat" items="{{content}}">
+        <b>{{item.Verse}}</b> <span inner-h-t-m-l="{{item.Text}}"></span>
       </template>
     </div>
 
@@ -27,7 +27,7 @@
       static get properties() {
         return {
           book: {
-            type: String,
+            type: Object,
             observer: '_changed',
           },
           chapter: {
@@ -41,17 +41,8 @@
         }
       }
       _changed() {
-        this.$.getter.url = '/api/books/' + this.book + '/' + this.chapter;
+        this.$.getter.url = '/api/versions/' + this.version + '/' + this.book.BookNumber + '/' + this.chapter;
       }
-      _toArray(obj) {
-      return Object.keys(obj).map(function(key) {
-        return {
-          name: key,
-          value: obj[key]
-        };
-      });
-    }
-
     }
 
     window.customElements.define(MyView1.is, MyView1);

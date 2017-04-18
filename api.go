@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/jmoiron/sqlx"
+	"strconv"
 )
 
 var books map[string][]string
@@ -71,9 +72,13 @@ func main() {
 			c.JSON(422, gin.H{"error": "bad version string"})
 			return
 		}
-		book := c.Param("book")
+		book, err := strconv.Atoi(c.Param("book"))
+		if err != nil {
+			c.JSON(422, gin.H{"error": "book needs to be an int"})
+			return
+		}
 		chapters := []string{}
-		err := selectedDb.Select(&chapters, "select distinct chapter from verses where book_number=?", book)
+		err = selectedDb.Select(&chapters, "select distinct chapter from verses where book_number=?", book)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -83,15 +88,19 @@ func main() {
 	// list verses of chapter
 	r.GET("/versions/:version/:book/:chapter", func(c *gin.Context) {
 		version := c.Param("version")
-		book := c.Param("book")
 		chapter := c.Param("chapter")
+		book, err := strconv.Atoi(c.Param("book"))
+		if err != nil {
+			c.JSON(422, gin.H{"error": "book needs to be an int"})
+			return
+		}
 		selectedDb, ok := versionMap[version]
 		if !ok {
 			c.JSON(422, gin.H{"error": "bad version string"})
 			return
 		}
 		var verses []Verse
-		err := selectedDb.Select(&verses, "select verse, text from verses where book_number=? and chapter=?", book, chapter)
+		err = selectedDb.Select(&verses, "select verse, text from verses where book_number=? and chapter=?", book, chapter)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return

@@ -17,16 +17,25 @@
         padding: 5px;
         --paper-tabs-selection-bar-color: var(--app-primary-color);
         --paper-tab-ink: var(--accent-color);
+        --paper-button: {
+          padding: 2px;
+        }
       }
 
       .books {
         display: flex;
-        justify-content: space-between;
+        /*justify-content: space-between;*/
         flex-wrap: wrap;
       }
 
       .btn {
-        margin: 8px;
+        /*margin: 8px;*/
+      }
+
+      .num {
+        --paper-button: {
+          padding: 2px;
+        }
       }
     </style>
 
@@ -40,12 +49,12 @@
         <iron-pages selected={{selected}}>
           <div class="books">
             <template is="dom-repeat" items="{{oldT}}">
-              <paper-button class="btn" on-tap="selectBook">{{item}}</paper-button>
+              <paper-button class="btn" on-tap="selectBook">{{item.LongName}}</paper-button>
             </template>
           </div>
           <div class="books">
             <template is="dom-repeat" items="{{newT}}">
-              <paper-button class="btn" on-tap="selectBook">{{item}}</paper-button>
+              <paper-button class="btn" on-tap="selectBook">{{item.LongName}}</paper-button>
             </template>
           </div>
         </iron-pages>
@@ -56,14 +65,14 @@
     </paper-dialog>
 
     <paper-dialog id="modal2" modal>
-      <h1>Select Chapter of {{book}}</h1>
+      <h1>Select Chapter of {{book.LongName}}</h1>
       <paper-dialog-scrollable>
         <template is="dom-repeat" items="{{chapters}}">
           <paper-button on-tap="selectChapter">{{item}}</paper-button>
         </template>
       </paper-dialog-scrollable>
       <div class="buttons">
-        <paper-button dialog-confirm autofocus>Cancel</paper-button>
+        <paper-button dialog-confirm autofocus class="num">Cancel</paper-button>
       </div>
     </paper-dialog>
 
@@ -96,6 +105,9 @@
           chapter: {
             type: Number
           },
+          version: {
+            type: String
+          },
           pickingChapter: {
             type: Boolean,
             value: false
@@ -108,14 +120,14 @@
       }
 
       onBooks(e) {
-        this.oldT = e.detail.response['old'];
-        this.newT = e.detail.response['new'];
+        this.oldT = e.detail.response.slice(0, 39);
+        this.newT = e.detail.response.slice(39);
       }
 
       selectBook(e) {
         this.book = e.model.get('item');
         this.pickingChapter = true;
-        this.$.getchapters.url = "/api/books/" + this.book;
+        this.$.getchapters.url = "/api/versions/" + this.version + '/' +  this.book.BookNumber;
         this.$.modal.close();
         this.$.modal2.open();
       }
