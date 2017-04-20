@@ -12,15 +12,16 @@
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="book-picker.html">
 <link rel="import" href="my-icons.html">
+<link rel="import" href="shared-styles.html">
 
 <dom-module id="my-app">
   <template>
-    <style>
+    <style include="shared-styles">
       :host {
-        --app-primary-color: var(--paper-blue-grey-900);
-        --app-secondary-color: var(--paper-blue-grey-300);
-        --accent-color: var(--paper-brown-500);
-
+        --app-drawer-content-container: {
+          color: var(--primary-text-color);
+          background-color: var(--primary-background-color);
+        }
         display: block;
       }
 
@@ -29,8 +30,8 @@
       }
 
       app-header {
-        color: #fff;
-        background-color: var(--app-primary-color);
+        color: var(--primary-text-color);
+        background-color: var(--primary-color);
       }
 
       app-header paper-icon-button {
@@ -45,12 +46,12 @@
         display: block;
         padding: 0 16px;
         text-decoration: none;
-        color: var(--app-secondary-color);
+        color: var(--primary-text-color);
         line-height: 40px;
       }
 
       .drawer-list a.iron-selected {
-        color: black;
+        color: var(--primary-text-color);
         font-weight: bold;
       }
     </style>
