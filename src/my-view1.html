@@ -9,12 +9,32 @@
         display: block;
         padding: 5px;
       }
+      h3 {
+        color: black;
+        text-align: center;
+      }
+      .q1 {
+        margin-left: 10px;
+      }
+      .q2 {
+        margin-left: 20px;
+      }
+      p {
+        margin: 0;
+        padding: 0;
+        color: black;
+      }
+      .b {
+        padding-bottom: 20px;
+      }
+      sup {
+        font-weight: 100;
+      }
     </style>
 
     <div class=card>
-      <h1>{{chapter}}</h1>
       <template is="dom-repeat" items="{{content}}">
-        <b>{{item.Verse}}</b> <span inner-h-t-m-l="{{item.Text}}"></span>
+        <span inner-h-t-m-l="{{item.Text}}"></span>
       </template>
     </div>
 
@@ -41,7 +61,7 @@
         }
       }
       _changed() {
-        this.$.getter.url = '/api/versions/' + this.version + '/' + this.book.BookNumber + '/' + this.chapter;
+        this.$.getter.url = '/api/versions/' + this.version + '/' + this.book.abbr + '/' + this.chapter;
       }
     }
 

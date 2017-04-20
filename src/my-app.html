@@ -79,7 +79,7 @@
         <app-header slot="header" condenses reveals effects="waterfall">
           <app-toolbar>
             <paper-icon-button icon="my-icons:menu" drawer-toggle></paper-icon-button>
-            <div main-title>{{book.LongName}} {{chapter}}</div>
+            <div main-title>{{book.name}} {{chapter}}</div>
             <paper-icon-button on-tap="pick" icon="my-icons:book" style="color: white;"></paper-icon-button>
             <paper-button on-tap="vpick">
               {{version}}
@@ -125,9 +125,8 @@
           book: {
             type: Object,
             value: {
-              BookNumber: 10,
-              LongName: "Genesis",
-              ShortName: "Gn"
+              name: "Genesis",
+              abbr: "Gen"
             }
           },
           chapter: {
@@ -136,7 +135,7 @@
           },
           version: {
             type: String,
-            value: "msg"
+            value: "MSG"
           }
         };
       }

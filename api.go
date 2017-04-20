@@ -3,52 +3,32 @@ package main
 import (
 	"gopkg.in/gin-gonic/gin.v1"
 	"log"
-	"os"
 	"encoding/json"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/jmoiron/sqlx"
+	"net/http"
 	"strconv"
 )
 
-var books map[string][]string
-// TODO this is not good...
-// maps BOOK to map of CHAPTERS to map of VERSES to VERSE
-var MSG map[string]map[string]map[string]string
+const (
+	key = Key
+	pw = Pw
+	esv = "eng-ESV"
+	msg = "eng-MSG"
+	https = "https://"
+	biblesUrl = https + key + ":" + pw + "@" + "bibles.org/v2"
+)
 
-func init() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	f, err := os.Open("./data/books.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err = json.NewDecoder(f).Decode(&books); err != nil {
-		log.Fatal(err)
-	}
-	f, err = os.Open("./data/MSG.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err = json.NewDecoder(f).Decode(&MSG); err != nil {
-		log.Fatal(err)
-	}
-}
+var versions = []string{esv, msg}
 
 type Book struct {
-	BookNumber int `db:"book_number"`
-	ShortName string `db:"short_name"`
-	LongName string `db:"long_name"`
+	Id string `json:"abbr"`
+	Name string `json:"name"`
+}
+
+type Chapter struct {
+	Chapter string `json:"chapter"`
 }
 
 func main() {
-	esvdb := mustOpen("./data/ESV.SQLite3")
-	msgdb := mustOpen("./data/MSG.SQLite3")
-	defer esvdb.Close()
-	defer msgdb.Close()
-
-	versionMap := map[string]*sqlx.DB{
-		"esv": esvdb,
-		"msg": msgdb,
-	}
 
 	r := gin.Default()
 	r.NoRoute(func (c *gin.Context) {
@@ -56,32 +36,57 @@ func main() {
 	})
 	// list books
 	r.GET("/books", func(c *gin.Context) {
-		var books []Book
-		err := esvdb.Select(&books, "select book_number, short_name, long_name from books order by book_number")
+		r, err := http.Get(biblesUrl + "/versions/eng-ESV/books.js")
 		if err != nil {
-			c.JSON(500, map[string]string{"error": err.Error()})
+			log.Println(err)
+			c.JSON(500, gin.H{"error": "error talking to bibles.org"})
 			return
 		}
-		c.JSON(200, books)
+		defer r.Body.Close()
+		var response struct {
+			Response struct {
+					 Books []Book `json:"books"`
+				 } `json:"response"`
+		}
+		if err = json.NewDecoder(r.Body).Decode(&response); err != nil {
+			log.Println(err)
+			c.JSON(500, gin.H{"error": "error decoding data from bibles.org"})
+			return
+		}
+		c.JSON(200, response.Response.Books)
+	})
+	r.GET("/versions", func(c *gin.Context) {
+		c.JSON(200, versions)
 	})
 	// list chapters
 	r.GET("/versions/:version/:book", func(c *gin.Context) {
 		version := c.Param("version")
-		selectedDb, ok := versionMap[version]
-		if !ok {
-			c.JSON(422, gin.H{"error": "bad version string"})
+		book := c.Param("book")
+		r, err := http.Get(biblesUrl + "/books/eng-" + version + ":" + book + "/chapters.js")
+		if err != nil {
+			log.Println(err)
+			c.JSON(500, gin.H{"error": "error talking to bibles.org"})
 			return
 		}
-		book, err := strconv.Atoi(c.Param("book"))
-		if err != nil {
-			c.JSON(422, gin.H{"error": "book needs to be an int"})
+		var response struct {
+			Response struct {
+					 Chapters []Chapter `json:"chapters"`
+				 } `json:"response"`
+		}
+		if err = json.NewDecoder(r.Body).Decode(&response); err != nil {
+			log.Println(err)
+			c.JSON(500, gin.H{"error": "error decoding data from bibles.org"})
 			return
 		}
-		chapters := []string{}
-		err = selectedDb.Select(&chapters, "select distinct chapter from verses where book_number=?", book)
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
+		var chapters []int
+		for _, ch := range response.Response.Chapters {
+			chap, err := strconv.Atoi(ch.Chapter)
+			if err != nil {
+				log.Println(err)
+				c.JSON(500, gin.H{"error": "WAT"})
+				return
+			}
+			chapters = append(chapters, chap)
 		}
 		c.JSON(200, chapters)
 	})
@@ -89,23 +94,24 @@ func main() {
 	r.GET("/versions/:version/:book/:chapter", func(c *gin.Context) {
 		version := c.Param("version")
 		chapter := c.Param("chapter")
-		book, err := strconv.Atoi(c.Param("book"))
+		book := c.Param("book")
+		r, err := http.Get(biblesUrl + "/chapters/eng-" + version + ":" + book + "." + chapter + "/verses.js")
 		if err != nil {
-			c.JSON(422, gin.H{"error": "book needs to be an int"})
+			log.Println(err)
+			c.JSON(500, gin.H{"error": "error talking to bibles.org"})
 			return
 		}
-		selectedDb, ok := versionMap[version]
-		if !ok {
-			c.JSON(422, gin.H{"error": "bad version string"})
+		var response struct {
+			Response struct {
+					 Verses []Verse `json:"verses"`
+				 } `json:"response"`
+		}
+		if err = json.NewDecoder(r.Body).Decode(&response); err != nil {
+			log.Println(err)
+			c.JSON(500, gin.H{"error": "error decoding data from bibles.org"})
 			return
 		}
-		var verses []Verse
-		err = selectedDb.Select(&verses, "select verse, text from verses where book_number=? and chapter=?", book, chapter)
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(200, verses)
+		c.JSON(200, response.Response.Verses)
 	})
 	port := "8111"
 	log.Println("Serving http://localhost:" + port)
@@ -113,14 +119,7 @@ func main() {
 }
 
 type Verse struct {
-	Verse int `db:"verse"`
+	Verse string `db:"verse"`
 	Text string `db:"text"`
-}
-
-func mustOpen(dbname string) *sqlx.DB {
-	ddb, err := sqlx.Open("sqlite3", dbname)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return ddb
+	// TODO: Next and Prev
 }
